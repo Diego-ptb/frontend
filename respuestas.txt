@@ -1,0 +1,122 @@
+Comparación entre el frontend móvil y de escritorio para getUserInventory:
+
+**Frontend de Escritorio (React/TypeScript):**
+- Usa la función `useGetUserInventory(userId, params?, options?)` generada por orval.
+- Los params incluyen `status?: string`, y por defecto se pasa `status: 'ACTIVE'` en las páginas como InventoryPage.
+- Ejemplo: `useGetUserInventory(userId, { status: 'ACTIVE', page: 0, size: 20 }, { ... })`
+- Esto permite filtrar el inventario por status (ACTIVE, etc.).
+
+**Frontend Móvil (Kotlin):**
+- La función `getInventory(userId: String)` en InventoryRepository solo recibe userId.
+- No pasa ningún parámetro adicional al data source, por lo que no filtra por status.
+- Esto significa que el móvil probablemente obtiene todos los items sin filtrar por status, mientras que el escritorio filtra por 'ACTIVE'.
+
+El móvil le falta el parámetro `status` porque no está pasando params al data source.
+
+**Código corregido para móvil:**
+
+Primero, el InventoryRemoteDataSource actualizado para aceptar params:
+
+```kotlin
+package com.skintrades.data.remote.datasource
+
+import com.skintrades.api.client.InventoryClient
+import com.skintrades.api.client.AddInventoryItemRequest
+import com.skintrades.api.client.UpdateInventoryItemRequest
+import com.skintrades.data.model.response.InventoryItemDto
+import com.skintrades.data.model.response.PaginatedResponse
+import com.skintrades.data.remote.NetworkResult
+
+class InventoryRemoteDataSource(private val inventoryClient: InventoryClient) {
+
+    // Definimos los params aquí o en un lugar compartido
+    data class InventoryParams(
+        val search: String? = null,
+        val weapon: String? = null,
+        val rarity: String? = null,
+        val type: String? = null,
+        val status: String? = "ACTIVE", // Por defecto ACTIVE
+        val page: Int? = 0,
+        val size: Int? = 20
+    )
+
+    suspend fun getInventory(userId: String, params: InventoryParams? = null): NetworkResult<PaginatedResponse<InventoryItemDto>> {
+        return try {
+            // Asumiendo que InventoryClient.getInventory puede aceptar params como query parameters
+            val response = inventoryClient.getInventory(
+                userId = userId,
+                search = params?.search,
+                weapon = params?.weapon,
+                rarity = params?.rarity,
+                type = params?.type,
+                status = params?.status,
+                page = params?.page,
+                size = params?.size
+            )
+            NetworkResult.Success(response)
+        } catch (e: Exception) {
+            // Aquí podrías manejar diferentes tipos de excepciones (red, servidor, etc.)
+            NetworkResult.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun getInventoryItem(itemId: String): NetworkResult<InventoryItemDto> {
+        return try {
+            val response = inventoryClient.getInventoryItem(itemId)
+            NetworkResult.Success(response)
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun updateInventoryItem(itemId: String, request: UpdateInventoryItemRequest): NetworkResult<InventoryItemDto> {
+        return try {
+            val response = inventoryClient.updateInventoryItem(itemId, request)
+            NetworkResult.Success(response)
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+
+    suspend fun addToInventory(request: AddInventoryItemRequest): NetworkResult<InventoryItemDto> {
+        return try {
+            val response = inventoryClient.addToInventory(request)
+            NetworkResult.Success(response)
+        } catch (e: Exception) {
+            NetworkResult.Error(e.message ?: "An unknown error occurred")
+        }
+    }
+}
+```
+
+Nota: Asumí que InventoryClient.getInventory puede aceptar esos parámetros como query params. Si el cliente no los soporta, actualiza el cliente (probablemente Retrofit) para incluirlos en la anotación @Query.
+
+Luego, el InventoryRepository corregido (igual que antes):
+
+```kotlin
+package com.skintrades.data.repository
+
+import com.skintrades.data.model.response.InventoryItemDto
+import com.skintrades.data.model.response.PaginatedResponse
+import com.skintrades.data.remote.NetworkResult
+import com.skintrades.data.remote.datasource.InventoryRemoteDataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
+class InventoryRepository(private val inventoryRemoteDataSource: InventoryRemoteDataSource) {
+
+    // Usamos el mismo InventoryParams del DataSource
+    fun getInventory(userId: String, params: InventoryRemoteDataSource.InventoryParams? = InventoryRemoteDataSource.InventoryParams()): Flow<NetworkResult<PaginatedResponse<InventoryItemDto>>> = flow {
+        emit(NetworkResult.Loading) // Primero, emitimos que estamos cargando
+        try {
+            // Llamamos al DataSource para obtener el resultado de la red, pasando params
+            val networkResult = inventoryRemoteDataSource.getInventory(userId, params)
+            // Emitimos el resultado (que será Success o Error)
+            emit(networkResult)
+        } catch (e: Exception) {
+            // Por si acaso, capturamos cualquier otra excepción y emitimos un error
+            emit(NetworkResult.Error("Repository error: ${e.message}"))
+        }
+    }
+}
+```
