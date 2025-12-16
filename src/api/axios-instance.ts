@@ -1,8 +1,32 @@
 import axios, { type AxiosRequestConfig } from 'axios';
 import { apiCircuitBreakers } from '../utils/circuitBreaker';
 
+<<<<<<< HEAD
 export const AXIOS_INSTANCE = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
+=======
+const getApiBaseUrl = (): string => {
+    // Prefer Vite's import.meta.env when available
+    try {
+        // Use any casts to avoid TS errors in different environments
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const meta: any = (typeof import.meta !== 'undefined') ? import.meta : undefined;
+        if (meta?.env?.VITE_API_BASE_URL) return meta.env.VITE_API_BASE_URL;
+    } catch (e) {
+        // ignore
+    }
+
+    // Fallback to Node-like process on test/CI environments
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g: any = globalThis as any;
+    if (g?.process?.env?.VITE_API_BASE_URL) return g.process.env.VITE_API_BASE_URL;
+
+    return '';
+};
+
+export const AXIOS_INSTANCE = axios.create({
+    baseURL: getApiBaseUrl(),
+>>>>>>> 471294a (s)
 });
 
 AXIOS_INSTANCE.interceptors.request.use((config) => {

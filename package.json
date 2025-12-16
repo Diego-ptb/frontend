@@ -25,22 +25,53 @@
     "recharts": "^3.5.1"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@eslint/js": "^9.39.1",
+=======
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@eslint/js": "^9.39.1",
+    "@types/jasmine": "^5.1.13",
+>>>>>>> 471294a (s)
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.2",
     "autoprefixer": "^10.4.22",
+<<<<<<< HEAD
+=======
+    "babel-loader": "^10.0.0",
+    "css-loader": "^7.1.2",
+>>>>>>> 471294a (s)
     "daisyui": "^5.5.5",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+<<<<<<< HEAD
     "orval": "^7.13.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.18",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
+=======
+    "jasmine-core": "^5.13.0",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-jasmine": "^5.1.0",
+    "karma-webpack": "^5.0.1",
+    "orval": "^7.13.2",
+    "postcss": "^8.5.6",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^3.4.18",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4",
+    "webpack": "^5.103.0",
+    "webpack-cli": "^6.0.1"
+>>>>>>> 471294a (s)
   }
 }
